@@ -20,6 +20,9 @@ Pour configurer ce projet, vous devez créer un fichier .env à la racine du pro
 
 - FILE_EMBEDING : Le chemin vers le fichier d'embedding.
 - OPENAI_API_KEY : Votre clé API OpenAI.
+
+et dans main.py :
+
 - VERBOSE : Un booléen qui détermine si le programme doit afficher des messages de débogage.
 - QUESTION : La question que vous voulez poser au programme.
 - NUM_LINK : Le nombre de liens à récupérer lors de la recherche d'informations sur le web.
