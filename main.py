@@ -18,11 +18,11 @@ load_dotenv()
 FILE_EMBEDING = os.getenv("FILE_EMBEDING")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 VERBOSE=True
-QUESTION = "Quel est le vrai prenom de laylow ?"
+QUESTION = ""
 NUM_LINK = 3
 prompt = """
   Repond en français , essaie de faire une reponse complete:
-  """+QUESTION
+  """+QUESTION+"""\nSi tu ne trouve pas la reponse essaie de quand meme donner des informations sur le sujet et demande de reformuler la question."""
 
 def printdebug(text):
   if VERBOSE:
@@ -72,23 +72,24 @@ def web_qa(url_list, query):
     content_ressource += get_webpage_text(url)
 
   reponse = multi_traitement_ressource(query,content_ressource)
-  print("\nReponse :")
-  print(reponse)
+  return "Reponse : \n"+reponse
 
 def trouver_urls(texte):
     pattern = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
     return re.findall(pattern, texte)[:NUM_LINK]
 
 def main():
-  urls = trouver_urls(QUESTION)
+  while True:
+    QUESTION = input("Question : ")
+    urls = trouver_urls(QUESTION)
 
-  if urls:
-    liens = urls
-  else:
-    search = DuckDuckGoSearchResults()
-    liens = str(search.run(QUESTION))
-    liens = trouver_urls(liens)
-
-  web_qa(liens,prompt)
+    if urls:
+      liens = urls
+    else:
+      search = DuckDuckGoSearchResults()
+      liens = str(search.run(QUESTION))
+      liens = trouver_urls(liens)
+    REPONSE = web_qa(liens,prompt)
+    print(REPONSE)
 
 main()
