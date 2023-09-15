@@ -2,4 +2,4 @@ langchain
 openai
 chromadb
 tiktoken
-duckduckgo-search
+python-dotenv
