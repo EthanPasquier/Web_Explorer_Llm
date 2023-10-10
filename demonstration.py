@@ -2,7 +2,6 @@ import json
 from Moteur_du_tool import ChatCompletion_openai_with_function, web_explorer
 from dotenv import load_dotenv
 import os
-
 load_dotenv()
 
 input_user = os.getenv("input_user")
@@ -22,6 +21,7 @@ if "choices" in data and len(data["choices"]) > 0 and "message" in data["choices
     reponse = web_explorer(input_user,title)
     print(reponse)
 else:
+    print("reponse basique sans web explorer")
     reponse = (str(data["choices"][0]["message"]["content"]))
     print(reponse)
     

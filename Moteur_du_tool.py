@@ -11,6 +11,11 @@ import os
 import re
 import openai
 import requests
+from datetime import date
+from babel.dates import format_date
+
+today = date.today()
+DATE = format_date(today, format="long", locale="fr_FR")
 
 # Charge les variables d'environnement depuis le fichier .env
 load_dotenv()
@@ -19,7 +24,7 @@ load_dotenv()
 FILE_EMBEDING = os.getenv("FILE_EMBEDING")
 openai.api_key = os.getenv("OPENAI_API_KEY")
 MODEL = os.getenv("model")
-VERBOSE=False
+VERBOSE=True
 NUM_LINK = 3
 
 
@@ -38,11 +43,14 @@ def get_webpage_text(url):
   except :
     text_content = ""
     printdebug(url+" est un echec")
+
+  print(text_content)
+  printdebug("end embeding")
   return text_content
 
 def analyze_text(prompt):
     prompt = """
-    Repond en français , essaie de faire une reponse complete en te basant sur tes ressources:
+    La date actuel est : """+DATE+""".Repond en français , essaie de faire une reponse complete en te basant sur tes ressources:
     """+prompt
     raw_documents = TextLoader(FILE_EMBEDING).load()
     text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=0)
@@ -114,12 +122,21 @@ def ChatCompletion_openai_with_function(demande,memoire):
     return completion
 
 def create_url(prompt):
-    prompt="'"+prompt+"'"
-    system = "Tu doit transformer la demande en recherche google de mots cles. exemple (question : 'qui as gagné le gp explorer de squeezie ?'\nReponse:https://www.google.com/search?q=winner+of+GP+Explorer+by+Squeezie) "
-    completion = openai.ChatCompletion.create(
-        model=MODEL,
-        messages=[{"role": "system", "content": system},{"role": "user", "content": prompt}],)
-    return completion.choices[0].message.content
+    prompt="Tu doit transformer la demande en recherche google de mots cles : '"+prompt+"'"
+    system = "Tu doit transformer la demande en recherche google de mots cles. exemple (question : 'qui as gagné le gp explorer de squeezie ?'\nReponse:https://www.google.com/search?q=winner+of+GP+Explorer+by+Squeezie). Si la question porte sur un sujet avec un repere temporel , tu peux t'aider de la date d'aujourd'hui :"+DATE+".s"
+    while True:
+        completion = openai.ChatCompletion.create(
+            model=MODEL,
+            temperature=0.3,
+            messages=[{"role": "system", "content": system},{"role": "user", "content": prompt}],)
+        url = trouver_urls(completion.choices[0].message.content)
+        if str(url) == "[]":
+            print(url)
+            continue
+        else:
+            print(url)
+            return url[0]
+            break
 
 
 def search_on_google(query,url):
@@ -141,8 +158,10 @@ def web_explorer(input_user,title):
     urls = trouver_urls(input_user)
     if urls:
         liens = urls
-        reponse = web_qa(liens,prompt)
+        printdebug("liens : "+str(liens))
+        reponse = web_qa(liens,input_user)
     else:
         liens = create_url(input_user)
+        printdebug("liens : "+str(liens))
         reponse = search_on_google(input_user,liens)
     return ("TITRE : "+str(title)+"\n\nREPONSE : "+reponse+"\n\nSource : "+str(liens)+"\n")
